@@ -64,7 +64,7 @@ function getOSInfo(platform, release) {
   return platform === 'win32' ? osName : `${osName} ${osVersion}`;
 }
 
-function updateSystemInfo(systemInfo) {
+function updateSystemInfo(systemInfo, cpuLoad) {
   const systemInfoDiv = document.getElementById('system-info');
 
   // 格式化运行时间
@@ -72,18 +72,12 @@ function updateSystemInfo(systemInfo) {
     const days = Math.floor(seconds / (3600 * 24));
     const hours = Math.floor((seconds % (3600 * 24)) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    return `${days}天 ${hours}小时 ${minutes}分钟`;
+    const secs = Math.floor(seconds % 60);
+    return `${days} 天 ${hours} 小时 ${minutes} 分钟 ${secs} 秒`;
   };
 
-  // 格式化 CPU 使用率
-  const formatCPUUsage = (times) => {
-    const total = Object.values(times).reduce((acc, val) => acc + val, 0);
-    const idle = times.idle;
-    return ((1 - idle / total) * 100).toFixed(1) + '%';
-  };
-
-  const cpuModel = systemInfo.cpus[0].model;
   const memoryUsage = ((1 - systemInfo.freeMemory / systemInfo.totalMemory) * 100).toFixed(1);
+  const cpuUsage = cpuLoad ? cpuLoad.average.toFixed(1) : '0';
   const osInfo = getOSInfo(systemInfo.platform, systemInfo.release);
 
   // 架构信息部分
@@ -107,13 +101,7 @@ function updateSystemInfo(systemInfo) {
         <p><strong>总内存:</strong> ${formatBytes(systemInfo.totalMemory)}</p>
         <p><strong>可用内存:</strong> ${formatBytes(systemInfo.freeMemory)}</p>
         <p><strong>已用内存:</strong> ${formatBytes(systemInfo.totalMemory - systemInfo.freeMemory)}</p>
-        <div class="memory-usage-wrapper">
-          <p><strong>内存使用率:</strong> ${memoryUsage}%</p>
-          <div class="progress-bar">
-            <div class="progress-bar-fill ${getProgressBarClass(parseFloat(memoryUsage))}" 
-                 style="width: ${memoryUsage}%"></div>
-          </div>
-        </div>
+        <p><strong>内存使用率:</strong> ${memoryUsage}%</p>
       </div>
     </div>
   `;
@@ -141,6 +129,19 @@ function updateSystemInfo(systemInfo) {
     </div>
   `).join('');
 
+  // 修改处理器信息部分
+  const cpuSection = `
+    <div class="system-info-section">
+      <h4>处理器信息</h4>
+      <div class="system-info-grid">
+        <p><strong>型号:</strong> ${systemInfo.cpus[0].model}</p>
+        <p><strong>逻辑处理器:</strong> ${systemInfo.cpuCount}</p>
+        <p><strong>基准速率:</strong> ${systemInfo.cpus[0].speed}MHz</p>
+        <p><strong>CPU 利用率:</strong> ${cpuUsage}%</p>
+      </div>
+    </div>
+  `;
+
   systemInfoDiv.innerHTML = `
     <div class="system-info-container">
       <div class="system-info-section">
@@ -153,15 +154,7 @@ function updateSystemInfo(systemInfo) {
         </div>
       </div>
 
-      <div class="system-info-section">
-        <h4>处理器信息</h4>
-        <div class="system-info-grid">
-          <p><strong>型号:</strong> ${cpuModel}</p>
-          <p><strong>逻辑处理器:</strong> ${systemInfo.cpuCount}</p>
-          <p><strong>基准速率:</strong> ${systemInfo.cpus[0].speed}MHz</p>
-          <p><strong>使用率:</strong> ${formatCPUUsage(systemInfo.cpus[0].times)}</p>
-        </div>
-      </div>
+      ${cpuSection}
 
       ${memorySection}
       
@@ -173,7 +166,7 @@ function updateSystemInfo(systemInfo) {
 // 创建磁盘信息卡片的通用函数
 function createDiskCard(disk, partitions) {
   const diskTypeClass = disk.isSystem ? 'system-disk' : disk.isRemovable ? 'removable-disk' : '';
-  
+
   return `
     <div class="disk-details">
       <div class="disk-header">
@@ -252,13 +245,15 @@ function createPartitionRow(partition) {
   `;
 }
 
-// 更新磁盘信息的主函数
-async function updateDiskInfo() {
+// 更新信息
+async function updateInfo() {
   const diskDetails = document.getElementById('disk-details');
-  const { drives, systemInfo } = await window.electronAPI.getDiskInfo();
+  const { drives } = await window.electronAPI.getDiskInfo();
+  const cpuLoad = await window.electronAPI.getCpuLoad();
+  const systemInfo = await window.electronAPI.getSystemInfo();
   const scrollPosition = window.scrollY;
 
-  updateSystemInfo(systemInfo);
+  updateSystemInfo(systemInfo, cpuLoad);
   diskDetails.innerHTML = '';
 
   // 按物理磁盘分组
@@ -341,5 +336,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// 每60秒更新一次信息
-setInterval(updateDiskInfo, 60000); 
+// 每秒更新一次信息
+setInterval(updateInfo, 1000);

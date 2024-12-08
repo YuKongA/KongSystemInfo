@@ -189,19 +189,93 @@ async function getUnixDrives() {
   }
 }
 
+/**
+ * 获取CPU负载信息
+ * @returns {Promise<Object>} CPU负载信息对象
+ */
+async function getCpuLoad() {
+  return new Promise((resolve) => {
+    // 获取初始CPU信息
+    const startMeasure = os.cpus().map(cpu => {
+      const total = Object.values(cpu.times).reduce((acc, time) => acc + time, 0);
+      return {
+        idle: cpu.times.idle || 0, // 某些系统可能没有 idle 时间
+        total: total
+      };
+    });
+
+    // 延迟一段时间后再次测量
+    setTimeout(() => {
+      const endMeasure = os.cpus().map(cpu => {
+        const total = Object.values(cpu.times).reduce((acc, time) => acc + time, 0);
+        return {
+          idle: cpu.times.idle || 0,
+          total: total
+        };
+      });
+
+      // 计算所有CPU核心的总体使用率
+      let totalIdleDiff = 0;
+      let totalDiff = 0;
+
+      startMeasure.forEach((start, i) => {
+        const end = endMeasure[i];
+        totalIdleDiff += (end.idle - start.idle);
+        totalDiff += (end.total - start.total);
+      });
+
+      // 计算总体平均使用率
+      const averageUsage = totalDiff === 0 ? 0 : 
+        Math.round((100 - (totalIdleDiff / totalDiff * 100)) * 100) / 100;
+
+      // 计算每个核心的使用率
+      const cpuLoads = startMeasure.map((start, i) => {
+        const end = endMeasure[i];
+        const idleDiff = end.idle - start.idle;
+        const totalDiff = end.total - start.total;
+        const usagePercent = totalDiff === 0 ? 0 : 
+          (100 - (idleDiff / totalDiff * 100));
+        return Math.round(usagePercent * 100) / 100; // 保留两位小数
+      });
+
+      resolve({
+        average: averageUsage,
+        cores: cpuLoads
+      });
+    }, 1000); // 1秒的测量间隔
+  });
+}
+
 // IPC 通信处理
 ipcMain.handle('get-disk-info', async () => {
   try {
-    const [drives, systemInfo] = await Promise.all([
-      getDrives(),
-      getSystemInfo()
-    ])
-    return { drives, systemInfo }
+    const drives = await getDrives();
+    return { drives };
   } catch (error) {
-    console.error('获取系统信息失败:', error)
-    return { drives: [], systemInfo: null }
+    console.error('获取磁盘信息失败:', error);
+    return { drives: [] };
   }
-})
+});
+
+// 添加系统信息处理程序
+ipcMain.handle('get-system-info', async () => {
+  try {
+    return await getSystemInfo();
+  } catch (error) {
+    console.error('获取系统信息失败:', error);
+    return null;
+  }
+});
+
+// 添加CPU负载处理程序
+ipcMain.handle('get-cpu-load', async () => {
+  try {
+    return await getCpuLoad();
+  } catch (error) {
+    console.error('获取CPU负载失败:', error);
+    return null;
+  }
+});
 
 // 应用生命周期事件处理
 app.whenReady().then(createWindow)

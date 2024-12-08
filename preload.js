@@ -2,7 +2,8 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('electronAPI', {
     getDiskInfo: () => ipcRenderer.invoke('get-disk-info'),
-    copyToClipboard: (text) => navigator.clipboard.writeText(text)
+    getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
+    getCpuLoad: () => ipcRenderer.invoke('get-cpu-load')
 })
 
 window.addEventListener('DOMContentLoaded', () => {
