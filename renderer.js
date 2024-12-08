@@ -1,3 +1,18 @@
+async function initTheme() {
+  // 获取初始主题
+  const isDark = await window.electronAPI.getSystemTheme()
+  updateTheme(isDark)
+  
+  // 监听主题变化
+  window.electronAPI.onThemeChange((event, isDark) => {
+    updateTheme(isDark)
+  })
+}
+
+function updateTheme(isDark) {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+}
+
 function formatBytes(bytes) {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   if (bytes === 0) return '0 Byte';
@@ -303,8 +318,9 @@ function handleScroll(scrollPosition) {
 // 页面加载完成后获取磁盘信息
 document.addEventListener('DOMContentLoaded', () => {
   // 初始化
+  initTheme();
   window.isInitialLoad = false;
-  updateDiskInfo();
+  updateInfo();
 
   // 添加展开/收起事件监听
   document.querySelectorAll('.section-header').forEach(header => {

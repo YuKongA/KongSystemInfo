@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu, nativeTheme } = require('electron')
 const path = require('path')
 const { getDrives } = require('./utils/disk')
 const { getSystemInfo, getCpuLoad } = require('./utils/system')
@@ -13,6 +13,8 @@ const CONFIG = {
     title: 'KongSystemInfo',
     autoHideMenuBar: true,
     menuBarVisible: false,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#141414' : '#f5f7fa',
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -49,6 +51,16 @@ function createWindow() {
     Menu.setApplicationMenu(menu)
     mainWindow.setMenuBarVisibility(false)
 
+    mainWindow.once('ready-to-show', () => {
+      mainWindow.show()
+    })
+
+    // 监听系统主题变化
+    nativeTheme.on('updated', () => {
+      mainWindow.setBackgroundColor(nativeTheme.shouldUseDarkColors ? '#141414' : '#f5f7fa')
+      mainWindow.webContents.send('theme-changed', nativeTheme.shouldUseDarkColors)
+    })
+
     // 开发环境下自动打开开发者工具
     if (process.env.NODE_ENV === 'development') {
       mainWindow.webContents.openDevTools()
@@ -61,6 +73,10 @@ function createWindow() {
 }
 
 // IPC 通信处理
+ipcMain.handle('get-system-theme', () => {
+  return nativeTheme.shouldUseDarkColors
+});
+
 ipcMain.handle('get-disk-info', async () => {
   try {
     const drives = await getDrives();

@@ -264,7 +264,7 @@ body {
 .usage-percent {
   min-width: 42px;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-color);
 }
 
 /* 表格样式 */
@@ -295,6 +295,7 @@ body {
   border-bottom: 1px solid var(--border-color);
   text-align: left;
   vertical-align: middle;
+  color: var(--text-color);
 }
 
 .disk-partitions-table tr:last-child td {
