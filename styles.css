@@ -1,3 +1,7 @@
+html {
+  color-scheme: light dark;
+}
+
 :root {
   --primary-color: #1890ff;
   --success-color: #52c41a;
@@ -12,6 +16,28 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --card-bg: #ffffff;
+  --hover-bg: #fafafa;
+  --toggle-btn-bg: #f5f7fa;
+  --toggle-btn-hover: #edf2f7;
+}
+
+/* 添加深色模式变量 */
+[data-theme="dark"] {
+  --primary-color: #177ddc;
+  --success-color: #49aa19;
+  --warning-color: #d89614;
+  --danger-color: #dc4446;
+  --border-color: #303030;
+  --bg-color: #141414;
+  --text-color: #e6e6e6;
+  --text-secondary: #a6a6a6;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --card-bg: #1f1f1f;
+  --hover-bg: #262626;
+  --toggle-btn-bg: #262626;
+  --toggle-btn-hover: #303030;
 }
 
 /* 基础样式 */
@@ -41,6 +67,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 标题容器样式 */
@@ -50,9 +77,9 @@ body {
   justify-content: space-between;
   padding: 12px 16px;
   margin-bottom: 12px;
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-color);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   cursor: pointer;
   user-select: none;
@@ -63,8 +90,8 @@ body {
 }
 
 .section-header:hover {
-  background-color: #fafafa;
-  border-color: #e8e8e8;
+  background-color: var(--hover-bg);
+  border-color: var(--border-color);
 }
 
 .section-header h1 {
@@ -93,7 +120,7 @@ body {
   justify-content: center;
   border: none;
   border-radius: 8px;
-  background: #f5f7fa;
+  background: var(--toggle-btn-bg);
   transition: all 0.2s ease-in-out;
   flex-shrink: 0;
   padding: 0;
@@ -119,7 +146,7 @@ body {
 }
 
 .section-header:hover .toggle-btn {
-  background: #edf2f7;
+  background: var(--toggle-btn-hover);
 }
 
 .section-header:hover .arrow {
@@ -150,7 +177,7 @@ body {
 }
 
 .system-info-section {
-  background: white;
+  background: var(--card-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
@@ -258,7 +285,7 @@ body {
   padding: 12px 16px;
   font-size: 13px;
   border-bottom: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--card-bg);
   text-align: left;
 }
 
@@ -294,7 +321,7 @@ body {
 .version-info {
   margin-top: 12px;
   padding: 16px;
-  background: white;
+  background: var(--card-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
@@ -414,7 +441,7 @@ body {
 
 /* 磁盘详情样式 */
 .disk-details {
-  background: white;
+  background: var(--card-bg);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
@@ -448,7 +475,8 @@ body {
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  background: #e9ecef;
+  background: var(--toggle-btn-bg);
+  color: var(--text-color);
 }
 
 .disk-type-badge.system-disk {
@@ -459,6 +487,16 @@ body {
 .disk-type-badge.removable-disk {
   background: #fff3cd;
   color: #856404;
+}
+
+[data-theme="dark"] .disk-type-badge.system-disk {
+  background: #153450;
+  color: #40a9ff;
+}
+
+[data-theme="dark"] .disk-type-badge.removable-disk {
+  background: #4d3800;
+  color: #faad14;
 }
 
 .disk-info-grid {
