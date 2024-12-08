@@ -14,62 +14,402 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 基础样式 */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -ms-overflow-style: none;
+  /* IE and Edge */
   scrollbar-width: none;
+  /* Firefox */
+}
+
+/* Chrome, Safari and Opera */
+*::-webkit-scrollbar {
+  display: none;
 }
 
 .container {
   max-width: 1600px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 body {
   background-color: var(--bg-color);
   color: var(--text-color);
   line-height: 1.6;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
-h1 {
-  color: #2c3e50;
-  margin-bottom: 20px;
-  font-size: 28px;
-  padding-bottom: 10px;
+/* 标题容器样式 */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  overflow: hidden;
+  height: 56px;
+}
+
+.section-header:hover {
+  background-color: #fafafa;
+  border-color: #e8e8e8;
+}
+
+.section-header h1 {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  line-height: 1;
+}
+
+.toggle-btn {
+  pointer-events: none;
+  margin-left: 12px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: #f5f7fa;
+  transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.toggle-btn .arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #8c8c8c;
+  transform: rotate(0deg);
+  transition: all 0.2s ease-in-out;
+  width: 24px;
+  height: 24px;
+  opacity: 0.8;
+}
+
+.toggle-btn.collapsed .arrow {
+  transform: rotate(-180deg);
+}
+
+.section-header:hover .toggle-btn {
+  background: #edf2f7;
+}
+
+.section-header:hover .arrow {
+  color: #595959;
+}
+
+/* 内容区域样式 */
+.section-content {
+  transition: var(--transition);
+  overflow: hidden;
+  opacity: 1;
+  max-height: none;
+  margin: 0 0 12px 0;
+}
+
+.section-content.collapsed {
+  opacity: 0;
+  max-height: 0;
+  pointer-events: none;
 }
 
 /* 系统信息样式 */
-#system-info {
-  margin-bottom: 20px;
+.system-info-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
-#system-info h3 {
-  display: none;
+.system-info-section {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  transition: var(--transition);
+  height: 100%;
+}
+
+.system-info-section:hover {
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+
+.system-info-section h4 {
+  color: var(--text-color);
+  font-size: 18px;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .system-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
-#system-info p {
-  margin: 8px 0;
-  background: #f8f9fa;
-  padding: 8px 12px;
-  border-radius: 6px;
+.system-info-grid p {
+  margin: 0;
+  padding: 10px;
+  background: var(--bg-color);
+  border-radius: var(--radius-sm);
   font-size: 14px;
 }
 
-#system-info p strong {
-  color: #495057;
-  margin-right: 8px;
+/* 内存使用率样式 */
+.memory-usage-wrapper {
+  background: var(--bg-color);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-top: 0;
+}
+
+.memory-usage-wrapper p {
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  font-size: 14px;
+}
+
+/* 进度条样式 */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: var(--bg-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin: 0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--success-color);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.progress-bar-fill.warning {
+  background-color: var(--warning-color);
+}
+
+.progress-bar-fill.danger {
+  background-color: var(--danger-color);
+}
+
+/* 使用率显示样式 */
+.usage-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 140px;
+}
+
+.usage-percent {
+  min-width: 42px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* 表格样式 */
+.disk-partitions-table {
+  margin-top: 16px;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+  /* 平滑滚动 */
+}
+
+.disk-partitions-table th {
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: white;
+  text-align: left;
+}
+
+.disk-partitions-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.disk-partitions-table tr:last-child td {
+  border-bottom: none;
+}
+
+.disk-partitions-table td[data-status] {
+  font-weight: 500;
+}
+
+.disk-partitions-table td[data-status="danger"] {
+  color: var(--danger-color);
+}
+
+.disk-partitions-table td[data-status="warning"] {
+  color: var(--warning-color);
+}
+
+.disk-partitions-table td[data-status=""] {
+  color: var(--success-color);
+}
+
+/* 版本信息样式 */
+.version-info {
+  margin-top: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.version-info:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.version-left {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.version-left span {
+  color: var(--text-secondary);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.version-left span span {
+  color: var(--text-color);
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.version-right {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1600px) {
+  .system-info-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .system-info-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .system-info-container {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    padding: 10px 14px;
+    height: 48px;
+    border-radius: 10px;
+  }
+
+  .section-header h1 {
+    font-size: 15px;
+  }
+
+  .version-info {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 16px;
+  }
+
+  .version-left {
+    gap: 16px;
+  }
+
+  .version-left span,
+  .version-right {
+    font-size: 12px;
+  }
+
+  .disk-partitions-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .disk-partitions-table::-webkit-scrollbar {
+    display: none;
+  }
+
+  .disk-partitions-table th,
+  .disk-partitions-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  .toggle-btn {
+    width: 32px;
+    height: 32px;
+    margin-left: 10px;
+  }
+
+  .toggle-btn .arrow {
+    font-size: 12px;
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* 磁盘详情样式 */
@@ -78,14 +418,14 @@ h1 {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  margin: 20px 0;
-  padding: 20px;
+  margin-bottom: 12px;
+  padding: 16px;
   transition: var(--transition);
 }
 
 .disk-details:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  transform: none;
 }
 
 .disk-header {
@@ -94,12 +434,13 @@ h1 {
   align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .disk-header h3 {
-  color: #2c3e50;
+  color: var(--text-color);
   font-size: 18px;
+  margin: 0;
 }
 
 .disk-type-badge {
@@ -123,13 +464,14 @@ h1 {
 .disk-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .disk-info-item {
   padding: 12px;
-  background: #fafafa;
-  border-radius: 4px;
+  background: var(--bg-color);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -137,7 +479,7 @@ h1 {
 }
 
 .disk-info-item strong {
-  color: #495057;
+  color: var(--text-color);
   display: block;
   margin-bottom: 4px;
 }
@@ -149,438 +491,26 @@ h1 {
   text-overflow: ellipsis;
 }
 
-/* 表格样式 */
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  background: white;
-  margin-top: 10px;
-  border: 1px solid var(--border-color);
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-th {
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  font-weight: 500;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-td {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border-color);
-  color: var(--text-secondary);
-}
-
-tr:nth-child(even) {
-  background-color: #f9fafb;
-}
-
-tr:hover {
-  background-color: #fafafa;
-}
-
-/* 调整特定列的宽度 */
-td:first-child {  /* 磁盘列 */
-  width: 60px;
-}
-
-td:nth-child(2) {  /* 类型列 */
-  width: 100px;
-}
-
-td:nth-child(3) {  /* 文件系统列 */
-  width: 80px;
-}
-
-td:nth-child(7) {  /* 使用率列 */
-  width: 200px;
-}
-
-td:last-child {  /* 状态列 */
-  width: 80px;
-  text-align: center;
-}
-
-/* 进度条样式 */
-.progress-bar {
-  width: 100%;
-  background-color: var(--bg-color);
-  border-radius: var(--radius-sm);
-  height: 8px;
-  padding: 0;
-  overflow: hidden;
-  margin: 5px 0;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  border-radius: var(--radius-sm);
-  transition: var(--transition);
-  background-color: var(--success-color);
-}
-
-.progress-bar-fill.warning {
-  background-color: var(--warning-color);
-}
-
-.progress-bar-fill.danger {
-  background-color: var(--danger-color);
-}
-
-/* 状态样式 */
-.status-normal {
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 500;
-  background-color: rgba(82, 196, 26, 0.1);
-  color: var(--success-color);
-}
-
-.status-warning {
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 500;
-  background-color: rgba(250, 173, 20, 0.1);
-  color: var(--warning-color);
-}
-
-.status-danger {
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 500;
-  background-color: rgba(255, 77, 79, 0.1);
-  color: var(--danger-color);
-}
-
-/* 响应式设计 */
+/* 移动端适配补充 */
 @media (max-width: 768px) {
-  .container {
-    padding: 16px;
-  }
-
   .disk-info-grid {
     grid-template-columns: 1fr;
   }
 
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  #system-info p {
-    display: block;
-    margin: 5px 0;
-  }
-}
-
-/* 滚动条美化 */
-::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
-}
-
-/* 系统信息容器样式 */
-.system-info-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin-bottom: 20px;
-}
-
-.system-info-section {
-  background: white;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  padding: 20px;
-  transition: var(--transition);
-  height: 100%;
-}
-
-.system-info-section:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.system-info-section h4 {
-  color: #2c3e50;
-  font-size: 18px;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
-}
-
-.system-info-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.system-info-grid p {
-  margin: 0;
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-/* 内存信息样式 */
-.memory-usage-wrapper {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 0;
-}
-
-.memory-usage-wrapper p {
-  margin: 0 0 8px 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  font-size: 14px;
-}
-
-.memory-usage-wrapper .progress-bar {
-  margin: 0;
-  background-color: #e9ecef;
-}
-
-.memory-usage-wrapper .progress-bar-fill {
-  height: 12px;
-  background-color: #28a745;
-  border-radius: 3px;
-  transition: width 0.3s ease-in-out, background-color 0.3s;
-}
-
-/* 进度条颜色 */
-.progress-bar-fill {
-  background-color: #28a745;
-}
-
-.progress-bar-fill.warning {
-  background-color: #ffc107;
-}
-
-.progress-bar-fill.danger {
-  background-color: #dc3545;
-}
-
-/* 路径显示优化 */
-.system-info-grid p.path-info {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding-right: 24px;
-  position: relative;
-}
-
-.system-info-grid p.path-info:hover {
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-/* 响应式设计调整 */
-@media (max-width: 1600px) {
-  .system-info-container {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 1200px) {
-  .system-info-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 16px;
-  }
-
-  .system-info-container {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .disk-info-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* 分区信息样式 */
-.disk-info-item span {
-  display: block;
-  margin: 4px 0;
-  font-size: 13px;
-}
-
-.disk-info-item .progress-bar {
-  margin: 8px 0;
-}
-
-.disk-info-item strong {
-  display: block;
-  margin-bottom: 8px;
-  color: #2c3e50;
-  font-size: 14px;
-}
-
-/* 版本信息样式 */
-.version-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0px;
-  color: #666;
-}
-
-.version-left span {
-  margin-right: 20px;
-  font-size: 13px;
-}
-
-.version-left span span {
-  margin-right: 0;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.version-right {
-  color: #666;
-  font-size: 13px;
-}
-
-/* 响应式布局部分 */
-@media (max-width: 768px) {
-  .version-info {
+  .disk-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
   }
-  
-  .version-left span {
-    display: block;
-    margin: 5px 0;
-  }
-  
-  .version-right {
-    margin-top: 10px;
+
+  .disk-type-badge {
+    align-self: flex-start;
   }
 }
 
-/* 使用率显示样式 */
-.usage-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-width: 140px;
-}
-
-.usage-wrapper .progress-bar {
-  flex: 1;
-  margin: 0;
-  min-width: 90px;
-  height: 16px;
-  padding: 1px;
-}
-
-.usage-percent {
-  min-width: 42px;
-  text-align: right;
-  font-size: 13px;
-  color: #666;
-}
-
-/* 调整表格单元格内容垂直居中 */
-td {
-  vertical-align: middle;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  background: white;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  user-select: none;
-  transition: var(--transition);
-}
-
-.section-header:hover {
-  background-color: var(--bg-color);
-  box-shadow: var(--shadow-md);
-}
-
-.section-header:hover .toggle-btn {
-  background-color: white;
-}
-
-.section-header:hover .arrow {
-  color: var(--primary-color);
-}
-
-.section-header h1 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--text-color);
-  display: flex;
-  align-items: center;
-}
-
-.toggle-btn {
-  pointer-events: none;
-  margin-left: 12px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: transparent;
-  transition: var(--transition);
-}
-
-.toggle-btn .arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: var(--text-secondary);
-  transform: rotate(0deg);
-  transition: var(--transition);
-}
-
-.toggle-btn.collapsed .arrow {
-  transform: rotate(-180deg);
-}
-
-.section-content {
-  transition: var(--transition);
-  overflow: hidden;
-  opacity: 1;
-  max-height: none;
-  margin-bottom: 30px;
-  margin-top: 10px;
-}
-
-.section-content.collapsed {
-  opacity: 0;
-  max-height: 0;
-  margin-top: -10px;
-  pointer-events: none;
+/* 最后一个元素移除底部间距 */
+.disk-details:last-child,
+.section-content:last-child,
+.system-info-container:last-child {
+  margin-bottom: 0;
 }

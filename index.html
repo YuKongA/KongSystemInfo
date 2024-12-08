@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
-  <title>Kong System Info</title>
+    content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data:">
+  <title>KongSystemInfo</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -26,22 +26,6 @@
     </div>
     <div id="disk-info" class="section-content">
       <div id="disk-details"></div>
-      <table>
-        <thead>
-          <tr>
-            <th>磁盘</th>
-            <th>类型</th>
-            <th>文件系统</th>
-            <th>总容量</th>
-            <th>已用空间</th>
-            <th>可用空间</th>
-            <th>使用率</th>
-            <th>状态</th>
-          </tr>
-        </thead>
-        <tbody id="disk-list">
-        </tbody>
-      </table>
     </div>
     <div class="version-info">
       <div class="version-left">
@@ -50,7 +34,7 @@
         <span>Electron <span id="electron-version"></span></span>
       </div>
       <div class="version-right">
-        <span>Copyright © 2024 Kong System Info</span>
+        <span>Copyright © 2024 <b>KongSystemInfo</b></span>
       </div>
     </div>
   </div>

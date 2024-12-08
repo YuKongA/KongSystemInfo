@@ -1,35 +1,209 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu } = require('electron')
 const path = require('path')
 const os = require('os')
 const fs = require('fs')
-const si = require('systeminformation')
-const { getWindowsDiskDetails } = require('./utils/wmic')
-const { getDriveTypeString, extractVendor } = require('./utils/system')
+const { graphics, cpu } = require('systeminformation')
+const { getWindowsDiskDetails, getDriveTypeString, extractVendor } = require('./utils/disk')
 
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 1024,
-    height: 768,
-    title: 'Kong System Info',
+// 全局变量和配置
+const CONFIG = {
+  window: {
+    width: 1080,
+    height: 720,
+    minWidth: 1080,
+    minHeight: 720,
+    title: 'KongSystemInfo',
     autoHideMenuBar: true,
     menuBarVisible: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      devTools: true
     }
-  })
-
-  win.setMinimumSize(800, 600)
-  
-  if (process.env.NODE_ENV === 'development') {
-    win.webContents.openDevTools()
-  }
-
-  win.loadFile('index.html')
-  win.setMenu(null)
+  },
+  devMenu: [
+    {
+      label: '开发',
+      submenu: [
+        {
+          label: '开发者工具',
+          accelerator: 'F12',
+          click: (_, window) => window?.webContents.toggleDevTools()
+        }
+      ]
+    }
+  ]
 }
 
+let mainWindow = null
+
+/**
+ * 创建主窗口
+ */
+function createWindow() {
+  try {
+    mainWindow = new BrowserWindow(CONFIG.window)
+    mainWindow.setMinimumSize(CONFIG.window.minWidth, CONFIG.window.minHeight)
+
+    // 设置菜单
+    const menu = Menu.buildFromTemplate(CONFIG.devMenu)
+    Menu.setApplicationMenu(menu)
+    mainWindow.setMenuBarVisibility(false)
+
+    // 开发环境下自动打开开发者工具
+    if (process.env.NODE_ENV === 'development') {
+      mainWindow.webContents.openDevTools()
+    }
+
+    mainWindow.loadFile('index.html')
+  } catch (error) {
+    console.error('创建窗口失败:', error)
+  }
+}
+
+/**
+ * 获取系统信息
+ * @returns {Promise<Object>} 系统信息对象
+ */
+async function getSystemInfo() {
+  try {
+    const [gpuInfo, cpuInfo] = await Promise.all([
+      graphics(),
+      cpu()
+    ])
+
+    const cpus = os.cpus().map(({ model, speed, times }) => ({ 
+      model, 
+      speed, 
+      times 
+    }))
+
+    return {
+      platform: os.platform(),
+      release: os.release(),
+      arch: os.arch(),
+      hostname: os.hostname(),
+      totalMemory: os.totalmem(),
+      freeMemory: os.freemem(),
+      cpus,
+      cpuCount: cpus.length,
+      cpuDetails: cpuInfo,
+      uptime: os.uptime(),
+      userInfo: os.userInfo(),
+      graphics: gpuInfo.controllers.map(({
+        model, vendor, vram, driverVersion: driver,
+        bus, memoryTotal, memoryUsed
+      }) => ({
+        model, vendor, vram, driver, bus, memoryTotal, memoryUsed
+      }))
+    }
+  } catch (error) {
+    console.error('获取系统信息失败:', error)
+    return null
+  }
+}
+
+/**
+ * 获取驱动器信息
+ * @returns {Promise<Array>} 驱动器信息数组
+ */
+async function getDrives() {
+  try {
+    return process.platform === 'win32' ? 
+      await getWindowsDrives() : 
+      await getUnixDrives()
+  } catch (error) {
+    console.error('获取驱动器信息失败:', error)
+    return []
+  }
+}
+
+/**
+ * 获取 Windows 驱动器信息
+ * @returns {Promise<Array>} Windows 驱动器信息数组
+ */
+async function getWindowsDrives() {
+  try {
+    const diskDetails = await getWindowsDiskDetails()
+    if (!diskDetails?.logical?.length) return []
+
+    return diskDetails.logical.map(logicalDisk => {
+      const driveType = parseInt(logicalDisk.DriveType)
+      const physicalDisk = diskDetails.physical[0]
+      const size = parseInt(logicalDisk.Size) || 0
+      const freeSpace = parseInt(logicalDisk.FreeSpace) || 0
+
+      return {
+        drive: logicalDisk.DeviceID,
+        fileSystem: logicalDisk.FileSystem,
+        total: size,
+        free: freeSpace,
+        used: size - freeSpace,
+        type: getDriveTypeString(driveType),
+        isRemovable: driveType === 2,
+        isSystem: driveType === 3,
+        model: physicalDisk?.Model || 'Unknown',
+        serial: physicalDisk?.SerialNumber || 'Unknown',
+        vendor: physicalDisk ? extractVendor(physicalDisk.Caption) : 'Unknown',
+        device: physicalDisk?.Caption || 'Unknown',
+        interfaceType: physicalDisk?.InterfaceType || 'Unknown',
+        mediaType: physicalDisk?.MediaType || 'Unknown'
+      }
+    })
+  } catch (error) {
+    console.error('获取Windows驱动器信息失败:', error)
+    return []
+  }
+}
+
+/**
+ * 获取 Unix 系统驱动器信息
+ * @returns {Promise<Array>} Unix 驱动器信息数组
+ */
+async function getUnixDrives() {
+  try {
+    const info = fs.statfsSync('/')
+    const total = info.blocks * info.bsize
+    const free = info.bfree * info.bsize
+
+    return [{
+      drive: '/',
+      fileSystem: 'Unknown',
+      total,
+      free,
+      used: total - free,
+      type: '本地磁盘',
+      isRemovable: false,
+      isSystem: true,
+      model: 'Unknown',
+      serial: 'Unknown',
+      vendor: 'Unknown',
+      device: '/',
+      interfaceType: 'Unknown',
+      mediaType: 'Unknown'
+    }]
+  } catch (error) {
+    console.error('获取Unix驱动器信息失败:', error)
+    return []
+  }
+}
+
+// IPC 通信处理
+ipcMain.handle('get-disk-info', async () => {
+  try {
+    const [drives, systemInfo] = await Promise.all([
+      getDrives(),
+      getSystemInfo()
+    ])
+    return { drives, systemInfo }
+  } catch (error) {
+    console.error('获取系统信息失败:', error)
+    return { drives: [], systemInfo: null }
+  }
+})
+
+// 应用生命周期事件处理
 app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
@@ -43,104 +217,3 @@ app.on('activate', () => {
     createWindow()
   }
 })
-
-// 处理磁盘信息请求
-ipcMain.handle('get-disk-info', async () => {
-  try {
-    const drives = await getDrives()
-    const systemInfo = await getSystemInfo()
-
-    return { drives, systemInfo }
-  } catch (err) {
-    console.error('Error getting system info:', err)
-    return { drives: [], systemInfo: null }
-  }
-})
-
-// 获取驱动器信息
-async function getDrives() {
-  if (process.platform === 'win32') {
-    return await getWindowsDrives()
-  }
-  return await getUnixDrives()
-}
-
-// 获取 Windows 驱动器信息
-async function getWindowsDrives() {
-  const diskDetails = await getWindowsDiskDetails()
-  if (!diskDetails) return []
-
-  return diskDetails.logical.map(logicalDisk => {
-    const driveType = parseInt(logicalDisk.DriveType)
-    const physicalDisk = diskDetails.physical[0]
-
-    return {
-      drive: logicalDisk.DeviceID,
-      fileSystem: logicalDisk.FileSystem,
-      total: parseInt(logicalDisk.Size) || 0,
-      free: parseInt(logicalDisk.FreeSpace) || 0,
-      used: parseInt(logicalDisk.Size) - parseInt(logicalDisk.FreeSpace) || 0,
-      type: getDriveTypeString(driveType),
-      isRemovable: driveType === 2,
-      isSystem: driveType === 3,
-      model: physicalDisk?.Model || 'Unknown',
-      serial: physicalDisk?.SerialNumber || 'Unknown',
-      vendor: physicalDisk ? extractVendor(physicalDisk.Caption) : 'Unknown',
-      device: physicalDisk?.Caption || 'Unknown',
-      interfaceType: physicalDisk?.InterfaceType || 'Unknown',
-      mediaType: physicalDisk?.MediaType || 'Unknown'
-    }
-  })
-}
-
-// 获取 Unix 系统驱动器信息
-async function getUnixDrives() {
-  const info = fs.statfsSync('/')
-  return [{
-    drive: '/',
-    fileSystem: 'Unknown',
-    total: info.blocks * info.bsize,
-    free: info.bfree * info.bsize,
-    used: (info.blocks - info.bfree) * info.bsize,
-    type: '本地磁盘',
-    isRemovable: false,
-    isSystem: true,
-    model: 'Unknown',
-    serial: 'Unknown',
-    vendor: 'Unknown',
-    device: '/',
-    interfaceType: 'Unknown',
-    mediaType: 'Unknown'
-  }]
-}
-
-// 获取系统信息
-async function getSystemInfo() {
-  const gpuInfo = await si.graphics()
-  
-  return {
-    platform: os.platform(),
-    release: os.release(),
-    arch: os.arch(),
-    hostname: os.hostname(),
-    totalMemory: os.totalmem(),
-    freeMemory: os.freemem(),
-    cpus: os.cpus().map(cpu => ({
-      model: cpu.model,
-      speed: cpu.speed,
-      times: cpu.times
-    })),
-    cpuCount: os.cpus().length,
-    uptime: os.uptime(),
-    userInfo: os.userInfo(),
-    graphics: gpuInfo.controllers.map(gpu => ({
-      model: gpu.model,
-      vendor: gpu.vendor,
-      vram: gpu.vram,
-      driver: gpu.driverVersion,
-      bus: gpu.bus,
-      memoryTotal: gpu.memoryTotal,
-      memoryUsed: gpu.memoryUsed
-    }))
-  }
-}

@@ -123,7 +123,7 @@ function updateSystemInfo(systemInfo) {
     <div class="system-info-section">
       <h4>显卡信息 ${systemInfo.graphics.length > 1 ? (index + 1) : ''}</h4>
       <div class="system-info-grid">
-        <p><strong>显卡型号:</strong> ${gpu.model || 'Unknown'}</p>
+        <p><strong>型号:</strong> ${gpu.model || 'Unknown'}</p>
         <p><strong>制造商:</strong> ${gpu.vendor || 'Unknown'}</p>
         ${gpu.vram ? `<p><strong>显存大小:</strong> ${gpu.vram} MB</p>` : ''}
         ${gpu.driver ? `<p><strong>驱动版本:</strong> ${gpu.driver}</p>` : ''}
@@ -147,8 +147,8 @@ function updateSystemInfo(systemInfo) {
         <h4>系统信息</h4>
         <div class="system-info-grid">
           <p><strong>操作系统:</strong> ${osInfo} (${getArchText(systemInfo.arch)})</p>
-          <p><strong>主机名:</strong> ${systemInfo.hostname}</p>
-          <p><strong>用户名:</strong> ${systemInfo.userInfo.username}</p>
+          <p><strong>主机名称:</strong> ${systemInfo.hostname}</p>
+          <p><strong>用户名称:</strong> ${systemInfo.userInfo.username}</p>
           <p><strong>运行时间:</strong> ${formatUptime(systemInfo.uptime)}</p>
         </div>
       </div>
@@ -156,10 +156,10 @@ function updateSystemInfo(systemInfo) {
       <div class="system-info-section">
         <h4>处理器信息</h4>
         <div class="system-info-grid">
-          <p><strong>CPU型号:</strong> ${cpuModel}</p>
-          <p><strong>CPU核心数:</strong> ${systemInfo.cpuCount}</p>
-          <p><strong>CPU频率:</strong> ${systemInfo.cpus[0].speed}MHz</p>
-          <p><strong>CPU使用率:</strong> ${formatCPUUsage(systemInfo.cpus[0].times)}</p>
+          <p><strong>型号:</strong> ${cpuModel}</p>
+          <p><strong>逻辑处理器:</strong> ${systemInfo.cpuCount}</p>
+          <p><strong>基准速率:</strong> ${systemInfo.cpus[0].speed}MHz</p>
+          <p><strong>使用率:</strong> ${formatCPUUsage(systemInfo.cpus[0].times)}</p>
         </div>
       </div>
 
@@ -170,83 +170,112 @@ function updateSystemInfo(systemInfo) {
   `;
 }
 
-function updateDetailedDiskInfo(drive) {
-  const diskDetailsDiv = document.getElementById('disk-details');
-  const diskTypeClass = drive.isSystem ? 'system-disk' : drive.isRemovable ? 'removable-disk' : '';
-  const usage = ((drive.used / drive.total) * 100).toFixed(2);
-
-  const detailsHtml = `
+// 创建磁盘信息卡片的通用函数
+function createDiskCard(disk, partitions) {
+  const diskTypeClass = disk.isSystem ? 'system-disk' : disk.isRemovable ? 'removable-disk' : '';
+  
+  return `
     <div class="disk-details">
       <div class="disk-header">
-        <h3>${drive.model !== 'Unknown' ? drive.model : drive.drive}</h3>
-        <span class="disk-type-badge ${diskTypeClass}">
-          ${drive.type}
-        </span>
+        <h3>${disk.model !== 'Unknown' ? disk.model : disk.partitions[0].drive}</h3>
+        <span class="disk-type-badge ${diskTypeClass}">${disk.type}</span>
       </div>
-      <div class="disk-info-grid">
+      ${createDiskInfoGrid(disk)}
+      ${createPartitionsTable(partitions)}
+    </div>
+  `;
+}
+
+// 创建磁盘基本信息网格
+function createDiskInfoGrid(disk) {
+  const infoItems = [
+    { label: '厂商', value: disk.vendor },
+    { label: '序列号', value: disk.serial },
+    { label: '接口类型', value: disk.interfaceType }
+  ];
+
+  return `
+    <div class="disk-info-grid">
+      ${infoItems.map(item => `
         <div class="disk-info-item">
-          <strong>设备路径</strong>
-          <span>${drive.drive}</span>
+          <strong>${item.label}</strong>
+          <span>${item.value}</span>
         </div>
-        <div class="disk-info-item">
-          <strong>厂商</strong>
-          <span>${drive.vendor}</span>
-        </div>
-        <div class="disk-info-item copyable" onclick="copyToClipboard('${drive.serial}')">
-          <strong>序列号</strong>
-          <span>${drive.serial}</span>
-        </div>
-        <div class="disk-info-item">
-          <strong>接口类型</strong>
-          <span>${drive.interfaceType}</span>
-        </div>
-        <div class="disk-info-item">
-          <strong>文件系统</strong>
-          <span>${drive.fileSystem}</span>
-        </div>
-        <div class="disk-info-item">
-          <strong>总容量</strong>
-          <span>${formatBytes(drive.total)}</span>
-        </div>
-        <div class="disk-info-item">
-          <strong>可用空间</strong>
-          <span>${formatBytes(drive.free)}</span>
-        </div>
-        <div class="disk-info-item">
-          <strong>已用空间</strong>
-          <span>${formatBytes(drive.used)}</span>
-        </div>
-        <div class="disk-info-item">
-          <strong>使用率</strong>
+      `).join('')}
+    </div>
+  `;
+}
+
+// 创建分区表格
+function createPartitionsTable(partitions) {
+  return `
+    <table class="disk-partitions-table">
+      <thead>
+        <tr>
+          <th>分区</th>
+          <th>文件系统</th>
+          <th>总容量</th>
+          <th>已用空间</th>
+          <th>可用空间</th>
+          <th>使用率</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${partitions.map(partition => createPartitionRow(partition)).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// 创建分区行
+function createPartitionRow(partition) {
+  const usage = ((partition.used / partition.total) * 100).toFixed(2);
+  return `
+    <tr>
+      <td>${partition.drive}</td>
+      <td>${partition.fileSystem}</td>
+      <td>${formatBytes(partition.total)}</td>
+      <td>${formatBytes(partition.used)}</td>
+      <td>${formatBytes(partition.free)}</td>
+      <td>
+        <div class="usage-wrapper">
           <div class="progress-bar">
             <div class="progress-bar-fill ${getProgressBarClass(parseFloat(usage))}" 
                  style="width: ${usage}%"></div>
           </div>
-          <span>${usage}%</span>
+          <span class="usage-percent">${usage}%</span>
         </div>
-      </div>
-    </div>
+      </td>
+      <td data-status="${getStatusClass(parseFloat(usage))}">${getStatusText(parseFloat(usage))}</td>
+    </tr>
   `;
-
-  diskDetailsDiv.innerHTML += detailsHtml;
 }
 
+// 更新磁盘信息的主函数
 async function updateDiskInfo() {
-  const diskList = document.getElementById('disk-list');
   const diskDetails = document.getElementById('disk-details');
-  const response = await window.electronAPI.getDiskInfo();
-  const { drives, systemInfo } = response;
-
-  // 记住当前滚动位置
+  const { drives, systemInfo } = await window.electronAPI.getDiskInfo();
   const scrollPosition = window.scrollY;
 
   updateSystemInfo(systemInfo);
-
-  diskList.innerHTML = '';
   diskDetails.innerHTML = '';
 
-  // 按物理磁盘型号分组
-  const diskGroups = drives.reduce((groups, drive) => {
+  // 按物理磁盘分组
+  const diskGroups = groupDisksByModel(drives);
+
+  // 渲染磁盘信息
+  diskDetails.innerHTML = Object.values(diskGroups)
+    .map(disk => createDiskCard(disk, disk.partitions))
+    .join('');
+
+  // 处理页面滚动
+  handleScroll(scrollPosition);
+}
+
+// 按物理磁盘型号分组
+function groupDisksByModel(drives) {
+  return drives.reduce((groups, drive) => {
     const key = drive.model;
     if (!groups[key]) {
       groups[key] = {
@@ -255,91 +284,19 @@ async function updateDiskInfo() {
         serial: drive.serial,
         interfaceType: drive.interfaceType,
         mediaType: drive.mediaType,
+        type: drive.type,
+        isSystem: drive.isSystem,
+        isRemovable: drive.isRemovable,
         partitions: []
       };
     }
-    groups[key].partitions.push({
-      drive: drive.drive,
-      fileSystem: drive.fileSystem,
-      total: drive.total,
-      free: drive.free,
-      used: drive.used,
-      type: drive.type,
-      isSystem: drive.isSystem,
-      isRemovable: drive.isRemovable
-    });
+    groups[key].partitions.push(drive);
     return groups;
   }, {});
+}
 
-  // 显示合并后的磁盘详细信息
-  Object.values(diskGroups).forEach(disk => {
-    const detailsHtml = `
-      <div class="disk-details">
-        <div class="disk-header">
-          <h3>${disk.model !== 'Unknown' ? disk.model : disk.partitions[0].drive}</h3>
-          <span class="disk-type-badge ${disk.partitions[0].isSystem ? 'system-disk' : disk.partitions[0].isRemovable ? 'removable-disk' : ''}">
-            ${disk.partitions[0].type}
-          </span>
-        </div>
-        <div class="disk-info-grid">
-          <div class="disk-info-item">
-            <strong>厂商</strong>
-            <span>${disk.vendor}</span>
-          </div>
-          <div class="disk-info-item">
-            <strong>序列号</strong>
-            <span>${disk.serial}</span>
-          </div>
-          <div class="disk-info-item">
-            <strong>接口类型</strong>
-            <span>${disk.interfaceType}</span>
-          </div>
-          ${disk.partitions.map(partition => `
-            <div class="disk-info-item">
-              <strong>分区 ${partition.drive}</strong>
-              <span>文件系统: ${partition.fileSystem}</span>
-              <span>总容量: ${formatBytes(partition.total)}</span>
-              <span>可用空间: ${formatBytes(partition.free)}</span>
-              <span>已用空间: ${formatBytes(partition.used)}</span>
-              <span>使用率: ${((partition.used / partition.total) * 100).toFixed(2)}%</span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-    diskDetails.innerHTML += detailsHtml;
-  });
-
-  // 保持原有的表格显示
-  drives.forEach(drive => {
-    const usage = ((drive.used / drive.total) * 100).toFixed(2);
-    const progressBarClass = getProgressBarClass(parseFloat(usage));
-    const statusClass = getStatusClass(parseFloat(usage));
-    const statusText = getStatusText(parseFloat(usage));
-
-    const row = `
-      <tr>
-        <td>${drive.drive}</td>
-        <td>${drive.type}</td>
-        <td>${drive.fileSystem}</td>
-        <td>${formatBytes(drive.total)}</td>
-        <td>${formatBytes(drive.used)}</td>
-        <td>${formatBytes(drive.free)}</td>
-        <td>
-          <div class="usage-wrapper">
-            <div class="progress-bar">
-              <div class="progress-bar-fill ${progressBarClass}" style="width: ${usage}%"></div>
-            </div>
-            <span class="usage-percent">${usage}%</span>
-          </div>
-        </td>
-        <td class="${statusClass}">${statusText}</td>
-      </tr>
-    `;
-    diskList.innerHTML += row;
-  });
-
-  // 处理页面滚动
+// 处理页面滚动
+function handleScroll(scrollPosition) {
   if (!window.isInitialLoad) {
     window.scrollTo(0, 0);
     window.isInitialLoad = true;
@@ -365,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 切换按钮状态
       toggleBtn.classList.toggle('collapsed');
       targetElement.classList.toggle('collapsed');
-      
+
       // 切换内容显示状态
       if (isCollapsed) {
         targetElement.style.display = 'block';

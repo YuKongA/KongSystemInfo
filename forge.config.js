@@ -5,18 +5,13 @@ module.exports = {
   packagerConfig: {
     asar: true,
     name: 'KongSystemInfo',
-    executableName: 'KongSystemInfo',
-    productName: 'KongSystemInfo'
+    electronLanguages: ['zh-CN']
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {
-        name: 'KongSystemInfo',
-        //setupExe: 'KongSystemInfo-Setup.exe',
-        //setupIcon: './assets/icon.ico'
-      }
+      config: {}
     },
     {
       name: '@electron-forge/maker-zip',
@@ -24,25 +19,11 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {
-        options: {
-          name: 'kongsysteminfo',
-          productName: 'KongSystemInfo',
-          maintainer: 'YuKongA',
-          homepage: 'https://github.com/yukonga/KongSystemInfo'
-        }
-      },
+      config: {},
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {
-        options: {
-          name: 'kongsysteminfo',
-          productName: 'KongSystemInfo',
-          maintainer: 'YuKongA',
-          homepage: 'https://github.com/yukonga/KongSystemInfo'
-        }
-      },
+      config: {},
     },
   ],
   plugins: [

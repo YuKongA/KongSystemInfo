@@ -1,7 +1,11 @@
 /**
+ * 格式化工具函数集合
+ */
+
+/**
  * 格式化字节大小
  * @param {number} bytes - 字节数
- * @returns {string} 格式化后的大小
+ * @returns {string} 格式化后的大小字符串
  */
 function formatBytes(bytes) {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -11,9 +15,31 @@ function formatBytes(bytes) {
 }
 
 /**
+ * 获取使用率对应的状态类名
+ * @param {number} usage - 使用率百分比
+ * @returns {string} 状态类名
+ */
+function getStatusClass(usage) {
+  if (usage >= 90) return 'danger';
+  if (usage >= 70) return 'warning';
+  return '';
+}
+
+/**
+ * 获取使用率对应的状态文本
+ * @param {number} usage - 使用率百分比
+ * @returns {string} 状态文本
+ */
+function getStatusText(usage) {
+  if (usage >= 90) return '警告';
+  if (usage >= 70) return '注意';
+  return '正常';
+}
+
+/**
  * 格式化运行时间
  * @param {number} seconds - 秒数
- * @returns {string} 格式化后的时间
+ * @returns {string} 格式化后的时间字符串
  */
 function formatUptime(seconds) {
   const days = Math.floor(seconds / (3600 * 24));
@@ -24,5 +50,7 @@ function formatUptime(seconds) {
 
 module.exports = {
   formatBytes,
+  getStatusClass,
+  getStatusText,
   formatUptime
 }; 
