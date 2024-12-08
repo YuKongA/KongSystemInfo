@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Kong System Info</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="section-header">
+      <h1>基础信息</h1>
+      <button class="toggle-btn" data-target="system-info">
+        <span class="arrow">▼</span>
+      </button>
+    </div>
+    <div id="system-info" class="section-content"></div>
+    <div class="section-header">
+      <h1>磁盘信息</h1>
+      <button class="toggle-btn" data-target="disk-info">
+        <span class="arrow">▼</span>
+      </button>
+    </div>
+    <div id="disk-info" class="section-content">
+      <div id="disk-details"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>磁盘</th>
+            <th>类型</th>
+            <th>文件系统</th>
+            <th>总容量</th>
+            <th>已用空间</th>
+            <th>可用空间</th>
+            <th>使用率</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody id="disk-list">
+        </tbody>
+      </table>
+    </div>
+    <div class="version-info">
+      <div class="version-left">
+        <span>Node.js <span id="node-version"></span></span>
+        <span>Chromium <span id="chrome-version"></span></span>
+        <span>Electron <span id="electron-version"></span></span>
+      </div>
+      <div class="version-right">
+        <span>Copyright © 2024 Kong System Info</span>
+      </div>
+    </div>
+  </div>
+  <script src="./renderer.js"></script>
+</body>
+
+</html>
