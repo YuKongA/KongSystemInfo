@@ -1,5 +1,4 @@
 async function initTheme() {
-  // 获取初始主题
   const isDark = await window.electronAPI.getSystemTheme()
   updateTheme(isDark)
   
@@ -38,49 +37,28 @@ function getStatusText(usage) {
   return '正常';
 }
 
-// 添加一个操作系统识别函数
+// 操作系统识别（仅 Windows 支持）
 function getOSInfo(platform, release) {
-  let osName = '';
-  let osVersion = '';
-
-  switch (platform) {
-    case 'win32':
-      // Windows 11 的内部版本号大于等于 22000
-      const buildNumber = parseInt(release.split('.')[2]);
-      osName = buildNumber >= 22000 ? 'Windows 11' : 'Windows 10';
-      break;
-    case 'darwin':
-      osName = 'macOS';
-      const macVersions = {
-        '22': 'Ventura',
-        '21': 'Monterey',
-        '20': 'Big Sur',
-        '19': 'Catalina',
-        '18': 'Mojave',
-        '17': 'High Sierra'
-      };
-      const majorVersion = release.split('.')[0];
-      osVersion = macVersions[majorVersion] || release;
-      break;
-    case 'linux':
-      osName = 'Linux';
-      try {
-        osVersion = release;
-      } catch (error) {
-        osVersion = release;
-      }
-      break;
-    default:
-      osName = platform;
-      osVersion = release;
-  }
-
-  // Windows 不显示版本号，其他系统显示
-  return platform === 'win32' ? osName : `${osName} ${osVersion}`;
+  if (platform !== 'win32') return '不支持的系统';
+  const build = parseInt(String(release).split('.')[2], 10);
+  return build >= 22000 ? 'Windows 11' : 'Windows 10';
 }
 
 function updateSystemInfo(systemInfo, cpuLoad) {
   const systemInfoDiv = document.getElementById('system-info');
+  if (!systemInfo) {
+    systemInfoDiv.innerHTML = `
+      <div class="system-info-container">
+        <div class="system-info-section">
+          <h4>系统信息</h4>
+          <div class="system-info-grid">
+            <p><strong>状态:</strong> 加载中…</p>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
   // 格式化运行时间
   const formatUptime = (seconds) => {
@@ -262,10 +240,12 @@ function createPartitionRow(partition) {
 
 // 更新信息
 async function updateInfo() {
+  // 仅支持 Electron 环境
   const diskDetails = document.getElementById('disk-details');
   const { drives } = await window.electronAPI.getDiskInfo();
   const cpuLoad = await window.electronAPI.getCpuLoad();
   const systemInfo = await window.electronAPI.getSystemInfo();
+  const networkData = await window.electronAPI.getNetworkInfo();
   const scrollPosition = window.scrollY;
 
   updateSystemInfo(systemInfo, cpuLoad);
@@ -275,13 +255,63 @@ async function updateInfo() {
   const diskGroups = groupDisksByModel(drives);
 
   // 渲染磁盘信息
-  diskDetails.innerHTML = Object.values(diskGroups)
+  const diskCards = Object.values(diskGroups)
     .map(disk => createDiskCard(disk, disk.partitions))
     .join('');
+  diskDetails.innerHTML = diskCards || `
+    <div class="system-info-section">
+      <h4>磁盘信息</h4>
+      <div class="system-info-grid">
+        <p><strong>状态:</strong> 加载中…</p>
+      </div>
+    </div>
+  `;
 
   // 处理页面滚动
   handleScroll(scrollPosition);
+
+  // 更新网络信息
+  updateNetworkInfo(networkData);
 }
+
+// -------- 网络信息与温度监控渲染 --------
+
+function updateNetworkInfo(networkData) {
+  const container = document.getElementById('network-details');
+  const { interfaces = [] } = networkData || {};
+
+  const cards = interfaces.map((iface) => {
+    return `
+      <div class="system-info-section">
+        <h4>${iface.name}</h4>
+        <div class="system-info-grid">
+          <p><strong>类型:</strong> ${iface.type || '-'}</p>
+          <p><strong>状态:</strong> ${iface.operstate || '-'}</p>
+          <p><strong>速率:</strong> ${iface.speed ? iface.speed + ' Mbps' : '-'}</p>
+          <p><strong>IPv4:</strong> ${iface.ipv4 || '-'}</p>
+          <p><strong>IPv6:</strong> ${iface.ipv6 || '-'}</p>
+          <p><strong>MAC:</strong> ${iface.mac || '-'}</p>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = `
+    <div class="system-info-container">
+      ${cards.length ? cards.join('') : `
+        <div class="system-info-section">
+          <h4>网络信息</h4>
+          <div class="system-info-grid">
+            <p><strong>状态:</strong> 加载中…</p>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+// 已移除温度监控渲染
+
 
 // 按物理磁盘型号分组
 function groupDisksByModel(drives) {
@@ -317,39 +347,66 @@ function handleScroll(scrollPosition) {
 
 // 页面加载完成后获取磁盘信息
 document.addEventListener('DOMContentLoaded', () => {
-  // 初始化
-  initTheme();
-  window.isInitialLoad = false;
-  updateInfo();
-
-  // 添加展开/收起事件监听
+  // 添加展开/收起事件监听（数据加载前即可操作）
   document.querySelectorAll('.section-header').forEach(header => {
     header.addEventListener('click', () => {
-      const targetId = header.querySelector('.toggle-btn').dataset.target;
-      const targetElement = document.getElementById(targetId);
       const toggleBtn = header.querySelector('.toggle-btn');
-      const isCollapsed = toggleBtn.classList.contains('collapsed');
+      const targetId = toggleBtn.dataset.target;
+      const targetElement = document.getElementById(targetId);
+      const isExpanded = targetElement.getAttribute('data-expanded') === 'true';
 
-      // 切换按钮状态
-      toggleBtn.classList.toggle('collapsed');
-      targetElement.classList.toggle('collapsed');
-
-      // 切换内容显示状态
-      if (isCollapsed) {
+      if (!isExpanded) {
+        // 展开
+        toggleBtn.classList.remove('collapsed');
         targetElement.style.display = 'block';
-        setTimeout(() => {
+        targetElement.style.opacity = '1';
+        targetElement.style.maxHeight = '0px';
+        requestAnimationFrame(() => {
           targetElement.style.maxHeight = targetElement.scrollHeight + 'px';
-          targetElement.style.opacity = '1';
-        }, 0);
+        });
+
+        const onOpenEnd = (e) => {
+          if (e.propertyName === 'max-height') {
+            targetElement.style.maxHeight = '';
+            targetElement.setAttribute('data-expanded', 'true');
+            targetElement.removeEventListener('transitionend', onOpenEnd);
+          }
+        };
+        targetElement.addEventListener('transitionend', onOpenEnd);
       } else {
-        targetElement.style.maxHeight = '0';
-        targetElement.style.opacity = '0';
-        setTimeout(() => {
-          targetElement.style.display = 'none';
-        }, 300); // 等待动画完成
+        // 收起
+        toggleBtn.classList.add('collapsed');
+        targetElement.style.maxHeight = targetElement.scrollHeight + 'px';
+        targetElement.style.opacity = '1';
+        requestAnimationFrame(() => {
+          targetElement.style.maxHeight = '0px';
+          targetElement.style.opacity = '0';
+        });
+
+        const onCloseEnd = (e) => {
+          if (e.propertyName === 'max-height') {
+            targetElement.style.display = 'none';
+            targetElement.setAttribute('data-expanded', 'false');
+            targetElement.removeEventListener('transitionend', onCloseEnd);
+          }
+        };
+        targetElement.addEventListener('transitionend', onCloseEnd);
       }
     });
   });
+
+  // 初始化展开状态
+  document.querySelectorAll('.section-content').forEach(el => {
+    if (!el.getAttribute('data-expanded')) {
+      el.setAttribute('data-expanded', 'true');
+    }
+    el.style.display = 'block';
+  });
+
+  // 初始化主题与数据加载
+  initTheme();
+  window.isInitialLoad = false;
+  updateInfo();
 });
 
 // 每秒更新一次信息

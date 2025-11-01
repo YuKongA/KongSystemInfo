@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, Menu, nativeTheme } = require('electron')
 const path = require('path')
 const { getDrives } = require('./utils/disk')
-const { getSystemInfo, getCpuLoad } = require('./utils/system')
+const { getSystemInfo, getCpuLoad, getNetworkInfo } = require('./utils/system')
 
 // 全局变量和配置
 const CONFIG = {
@@ -106,6 +106,19 @@ ipcMain.handle('get-cpu-load', async () => {
     return null;
   }
 });
+
+// 添加网络信息处理程序
+ipcMain.handle('get-network-info', async () => {
+  try {
+    const interfaces = await getNetworkInfo();
+    return { interfaces };
+  } catch (error) {
+    console.error('获取网络信息失败:', error);
+    return { interfaces: [] };
+  }
+});
+
+// 已移除温度监控处理程序
 
 // 应用生命周期事件处理
 app.whenReady().then(createWindow)

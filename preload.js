@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getDiskInfo: () => ipcRenderer.invoke('get-disk-info'),
     getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
     getCpuLoad: () => ipcRenderer.invoke('get-cpu-load'),
+    getNetworkInfo: () => ipcRenderer.invoke('get-network-info'),
     getSystemTheme: () => ipcRenderer.invoke('get-system-theme'),
     onThemeChange: (callback) => ipcRenderer.on('theme-changed', callback)
 })

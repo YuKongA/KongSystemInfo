@@ -6,6 +6,7 @@ const os = require('os');
 const { getOSInfo } = require('./os');
 const { getCpuLoad, getCpuInfo } = require('./cpu');
 const { getGpuInfo } = require('./gpu');
+const { getNetworkInfo } = require('./network');
 
 /**
  * 获取系统信息
@@ -45,5 +46,6 @@ async function getSystemInfo() {
 module.exports = {
   getOSInfo,
   getCpuLoad,
-  getSystemInfo
-}; 
+  getSystemInfo,
+  getNetworkInfo,
+};

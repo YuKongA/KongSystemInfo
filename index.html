@@ -23,15 +23,47 @@
         <span class="arrow">▼</span>
       </button>
     </div>
-    <div id="system-info" class="section-content"></div>
+    <div id="system-info" class="section-content" data-expanded="true">
+      <div class="system-info-container">
+        <div class="system-info-section">
+          <h4>系统信息</h4>
+          <div class="system-info-grid">
+            <p><strong>状态:</strong> 加载中…</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="section-header">
       <h1>磁盘信息</h1>
       <button class="toggle-btn" data-target="disk-info">
         <span class="arrow">▼</span>
       </button>
     </div>
-    <div id="disk-info" class="section-content">
-      <div id="disk-details"></div>
+    <div id="disk-info" class="section-content" data-expanded="true">
+      <div id="disk-details">
+        <div class="system-info-section">
+          <h4>磁盘信息</h4>
+          <div class="system-info-grid">
+            <p><strong>状态:</strong> 加载中…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section-header">
+      <h1>网络信息</h1>
+      <button class="toggle-btn" data-target="network-info">
+        <span class="arrow">▼</span>
+      </button>
+    </div>
+    <div id="network-info" class="section-content" data-expanded="true">
+      <div id="network-details">
+        <div class="system-info-section">
+          <h4>网络信息</h4>
+          <div class="system-info-grid">
+            <p><strong>状态:</strong> 加载中…</p>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="version-info">
       <div class="version-left">

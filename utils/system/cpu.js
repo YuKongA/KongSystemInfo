@@ -35,10 +35,10 @@ function calculateCpuUsage(startMeasure, endMeasure) {
     const end = endMeasure[i];
     const idleDiff = end.idle - start.idle;
     const diffTotal = end.total - start.total;
-    
+
     totalIdleDiff += idleDiff;
     totalDiff += diffTotal;
-    
+
     return calculateUsagePercent(idleDiff, diffTotal);
   });
 
@@ -56,7 +56,7 @@ async function getCpuLoad() {
     setTimeout(() => {
       const endMeasure = getCpuTimes();
       const { totalUsage, coreUsages } = calculateCpuUsage(startMeasure, endMeasure);
-      
+
       resolve({
         average: totalUsage,
         cores: coreUsages
@@ -70,8 +70,8 @@ async function getCpuLoad() {
  */
 async function getCpuInfo() {
   const cpuDetails = await cpu();
-  const cpus = os.cpus().map(({ model, speed, times }) => ({ 
-    model, speed, times 
+  const cpus = os.cpus().map(({ model, speed, times }) => ({
+    model, speed, times
   }));
 
   return {
